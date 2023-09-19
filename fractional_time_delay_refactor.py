@@ -15,8 +15,11 @@ tend = samples/fs
 timeList = np.arange(tstart, tend, 1/fs)
 waveform = np.sin(2 * np.pi * f1 * timeList) + 1*np.sin(2 * np.pi * f2 * timeList)
 
+waveform_delayed = np.sin(2 * np.pi * f1 * (timeList-tDelay)) + 1*np.sin(2 * np.pi * f2 * (timeList-tDelay))
+
 # 1. Take the FFT
 fftData = np.fft.fft(waveform)
+fftData_delayed = np.fft.fft(waveform_delayed)
 
 # 2. Construct the phase shift
 samplePeriod = 1/fs
@@ -31,6 +34,22 @@ timeDelayPhaseShift = np.fft.fftshift(timeDelayPhaseShift)
 # 4. Multiply the fft data with the coefficients to apply the time shift
 fftWithDelay = np.multiply(fftData, timeDelayPhaseShift)
 
+plt.figure()
+plt.plot(np.unwrap(np.angle(np.fft.fftshift(fftData))),label='original')
+plt.plot(np.unwrap(np.angle(np.fft.fftshift(fftWithDelay))),label='delayed via fft')
+plt.plot(np.unwrap(np.angle(np.fft.fftshift(fftData_delayed))),label='time delayed')
+plt.grid()
+plt.legend()
+# plt.show()
+
+plt.figure()
+plt.plot(np.angle(np.fft.fftshift(fftData)),label='original')
+plt.plot(np.angle(np.fft.fftshift(fftWithDelay)),label='delayed via fft')
+plt.plot(np.angle(np.fft.fftshift(fftData_delayed)),label='time delayed')
+plt.grid()
+plt.legend()
+# plt.show()
+
 # 5. Do the IFFT
 shiftedWaveform = np.fft.ifft(fftWithDelay)
 
@@ -42,6 +61,9 @@ print("The correction phase shift is %f pi" % (tDelayInSamples))
 plt.figure()
 plots = 1
 plt.subplot(plots, 1, 1)
-plt.plot(waveform)
-plt.plot(shiftedWaveform)
+plt.plot(waveform,label='original')
+plt.plot(shiftedWaveform,label='delayed via fft')
+plt.plot(waveform_delayed,label='time delayed')
+plt.grid()
+plt.legend()
 plt.show()
