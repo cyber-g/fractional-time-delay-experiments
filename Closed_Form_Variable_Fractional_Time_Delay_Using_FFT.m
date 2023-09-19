@@ -5,11 +5,14 @@
 % Author: Germain Pham
 % Date: Sept. 2023
 
+clear all
+close all
+
 phi             = @(t,p)    1/sqrt(2^p*factorial(p)*sqrt(pi))*exp(-t.^2/2).*hermiteH(p,t);
 test_function   = @(t)      phi(t,5) + phi(t,12);
 
 
-N   = 64;
+N   = 128;
 t   = linspace(-7,7,N);
 Ts  = diff(t(1:2));
 y_0 = test_function(t);
@@ -17,7 +20,7 @@ y_0 = test_function(t);
 % plot(t,y_0,'s-')
 
 
-delay_vec = 0:0.1:10;
+delay_vec = 0:0.5:10;
 % for each delay, compute equation 4
 for i = 1:length(delay_vec)
     delay       = delay_vec(i);
@@ -31,6 +34,19 @@ for i = 1:length(delay_vec)
     y_delayed_fft_based = ifft(fft(y_0).*H); % equation 5
     y_delayed_truth     = test_function(t-delay*Ts);
     RMSD(i) = sqrt(mean(abs(y_delayed_fft_based-y_delayed_truth).^2));
+
+    % plot angles
+    angle_truth       = angle(fft(y_delayed_truth)./fft(y_0));
+    angle_fft_based   = angle(H);
+    % figure
+    % plot([angle_fft_based(:) angle_truth(:)])
+    % legend('fft-based','truth')
+    % plot slopes
+    slope_truth       = diff(unwrap(angle_truth));
+    slope_fft_based   = diff(unwrap(angle_fft_based));
+    figure
+    plot([slope_fft_based(:) slope_truth(:)])
+    legend('fft-based','truth')
 end
 
 figure
@@ -39,3 +55,10 @@ plot(delay_vec,RMSD)
 figure
 plot([y_delayed_fft_based(:) y_delayed_truth(:)])
 legend('fft-based','truth')
+
+figure
+plot(10*log10(abs(fft(y_0))))
+hold on
+plot(10*log10(abs(fft(y_0.*blackman(N).'))))
+hold off
+legend('Window:rectangular','Window:blackman')
